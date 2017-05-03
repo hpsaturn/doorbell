@@ -27,13 +27,9 @@ import android.util.Base64;
 import android.util.Log;
 
 import com.google.android.things.contrib.driver.button.Button;
-import com.google.firebase.database.DatabaseReference;
-import com.google.firebase.database.FirebaseDatabase;
-import com.google.firebase.database.ServerValue;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
-import java.util.Map;
 
 /**
  * Doorbell activity that capture a picture from the Raspberry Pi 3
@@ -43,7 +39,6 @@ import java.util.Map;
 public class DoorbellActivity extends Activity {
     private static final String TAG = DoorbellActivity.class.getSimpleName();
 
-    private FirebaseDatabase mDatabase;
     private DoorbellCamera mCamera;
 
     /*
@@ -90,7 +85,6 @@ public class DoorbellActivity extends Activity {
             return;
         }
 
-        mDatabase = FirebaseDatabase.getInstance();
 
         // Creates new handlers and associated threads for camera and networking operations.
         mCameraThread = new HandlerThread("CameraBackground");
@@ -166,26 +160,15 @@ public class DoorbellActivity extends Activity {
      */
     private void onPictureTaken(final byte[] imageBytes) {
         if (imageBytes != null) {
-            final DatabaseReference log = mDatabase.getReference("logs").push();
-            String imageStr = Base64.encodeToString(imageBytes, Base64.NO_WRAP | Base64.URL_SAFE);
+            final String imageStr = Base64.encodeToString(imageBytes, Base64.NO_WRAP | Base64.URL_SAFE);
             // upload image to firebase
-            log.child("timestamp").setValue(ServerValue.TIMESTAMP);
-            log.child("image").setValue(imageStr);
 
             mCloudHandler.post(new Runnable() {
                 @Override
                 public void run() {
                     Log.d(TAG, "sending image to cloud vision");
-                    // annotate image by uploading to Cloud Vision API
-                    try {
-                        Map<String, Float> annotations = CloudVisionUtils.annotateImage(imageBytes);
-                        Log.d(TAG, "cloud vision annotations:" + annotations);
-                        if (annotations != null) {
-                            log.child("annotations").setValue(annotations);
-                        }
-                    } catch (IOException e) {
-                        Log.e(TAG, "Cloud Vison API error: ", e);
-                    }
+                    Log.d(TAG, "image: "+imageStr);
+
                 }
             });
         }
