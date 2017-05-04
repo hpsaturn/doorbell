@@ -93,6 +93,7 @@ public class DoorbellCamera {
         mImageReader.setOnImageAvailableListener(
                 imageAvailableListener, backgroundHandler);
 
+
         // Open the camera resource
         try {
             manager.openCamera(id, mStateCallback, backgroundHandler);
@@ -142,6 +143,27 @@ public class DoorbellCamera {
 
         // Here, we create a CameraCaptureSession for capturing still images.
         try {
+            mCameraDevice.createCaptureSession(
+                    Collections.singletonList(mImageReader.getSurface()),
+                    mSessionCallback,
+                    null);
+        } catch (CameraAccessException cae) {
+            Log.d(TAG, "access exception while preparing pic", cae);
+        }
+    }
+
+    /**
+     * Begin a still image capture
+     */
+    public void continueDetection() {
+        if (mCameraDevice == null) {
+            Log.w(TAG, "Cannot capture image. Camera not initialized.");
+            return;
+        }
+
+        // Here, we create a CameraCaptureSession for capturing still images.
+        try {
+
             mCameraDevice.createCaptureSession(
                     Collections.singletonList(mImageReader.getSurface()),
                     mSessionCallback,
